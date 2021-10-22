@@ -1,0 +1,29 @@
+.Project_object {
+    background-color: #15354a;
+    color: white;
+    width: 1667px;
+    padding-left: 7px;
+    padding-top: 10px;
+}
+
+.header{
+font-size: 25px;
+}
+.github{
+  padding-top: 5px;
+  font-size: 18px;
+}
+.author {
+    padding-top: -7px;
+    font-size: 29px;
+    margin-top: -21px;
+    padding-bottom: 15px;
+    margin-right: 14px;
+    text-align: right;
+}
+
+h1:first-child, h2:first-child, h3:first-child, h4:first-child, h5:first-child {
+    margin-top: 2px;
+    margin-left: 6px;
+}
+
