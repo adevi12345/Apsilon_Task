@@ -1,148 +1,134 @@
 
-# UI module Starts....
-module_ui <- function (id) {
-  ns <- NS(id)
-  semanticPage(card(div(
-    class = "Project_object",
-    div(class = "header", "Title: Example Shiny App"),
-    div(class = "github", "GitHubLink: *********"),
-    div(class = "author", "Author:Anjana")
+
+# map.R Source file is located at R folder...
+
+# Start of the User Interface Module-2
+
+map_ui <- function(id) {
+  ns <- shiny::NS(id) # Namespace for Unique id's
+  shiny::tagList(
+    br(),
+    # Create a box to show the leaflet map
+    box(
+      title = "Selected Species Observations on the map",
+      width = 11,
+      solidHeader = TRUE,
+      status = "primary",
+      uiOutput(ns("ui_text_map")),  # uioutput for the infobox and leaflet map
+      # uiOutput(ns("ui_download"))  # UIoutput for the download button
+    )  # End of the box
     
-  )),
-  
-  card(div(
-    class = "vesseltype_class",
-    tags$h4("Please select Ship Type:"),
-    uiOutput(ns("vesseltype_uidropdown"))
-  )),
-  card(div(
-    class = "vesselname_class",
-    tags$h4("Please seletct Shiny Name:"),
-    
-    uiOutput(ns("vesselname_uidropdon"))
-  )),
- div(
-   class="ui_titleclass",
-   uiOutput(ns("title_ui"))
- ),
-  
-  div(class="map_class",
-      uiOutput(ns("map_ui"))
-  
-  ),
- card(div(
-   class="log_lal_class",
-   uiOutput(ns("log_class_ui"))
- ))
   )
-  
-  
 }
-# UI Modules Ends..
-#
-# Server Modules Starts...
+# End of the User Interface Module-2
 
-module_server <- function(input, output, session) {
-  ns <- session$ns
-  values <- reactiveValues()  # Creating Reactive variable.
-  path <-
-    "./final.feather"
-  observe({
-    values$ship_inputdataset <- read_feather(path)  # Converted csv into feather dataset for data speed purpose.
-    
-    values$shinytype_choices <-
-      factor(values$ship_inputdataset$ship_type)
-    
-    values$levels_shinytype <- levels(values$shinytype_choices)
-  })
-  
-  output$vesseltype_uidropdown <- renderUI({
-    dropdown_input(ns("select_shiptype"), choices = values$levels_shinytype)
-    
-  })
-  output$vesselname_uidropdon <- renderUI({
-    values$groupby_dataset <-
-      dplyr::group_by(values$ship_inputdataset, ship_type)
-    
-    values$shiptype_dateset <-
-      dplyr::filter(values$groupby_dataset,
-                    ship_type == input$select_shiptype)
-    
-    
-    values$vessel_names <- unique(values$shiptype_dateset$SHIPNAME)
-    
-    dropdown_input(ns("select_vesselname"), choices = values$vessel_names)
-  })
-  output$map_ui<-renderUI({
-    values$title<-paste0("Showing Longest Distance of the ",input$select_vesselname)
-   
-    box(width=5,title = values$title,
-        withLoader(
-         leafletOutput(ns("map")),type = "html", loader = "dnaspin"))
-  })
-  output$map <- renderLeaflet({
-    df <-
-      dplyr::filter(values$shiptype_dateset,
-                    SHIPNAME == input$select_vesselname)
+# Start of the Server Module-2
 
-    df$distance[2:nrow(df)] <- sapply(2:nrow(df), 
-                                      function(x) distm(df[x-1,c('LON', 'LAT')], df[x,c('LON', 'LAT')], fun = distHaversine))
-    
-    
-    
-    df$min_date<-min(df$DATETIME)
-    df$max_date<-max(df$DATETIME)
-    
-    gh<-df %>% 
-      group_by(SHIPNAME) %>% 
-      slice_max(distance)
-    
-    
-    gh_latest<-gh%>% 
-      group_by(SHIPNAME) %>% 
-      slice_max(DATETIME)
-    
-    #to make dynamic
-    
-    row_number<-which(grepl(gh_latest$distance[1], df$distance))
-    n<-row_number
-    n1<-n-1
-    values$final_dataset<-df %>% filter(row_number() %in% n1:n)
-    
-    leaflet(values$final_dataset) %>% addTiles() %>%
-      addPolylines(
-        data = values$final_dataset,
-        lng = ~ LON,
-        lat = ~ LAT,
-        weight = 3,
-        color = "#03F",
-        opacity = 3
-      ) %>%
-      addCircles(
-        data = values$final_dataset,
-        lng = ~ LON,
-        lat = ~ LAT,
-        weight = 9,
-        radius = 3,
-        color = "#15354a",
-        opacity = 3
-      )%>%
-      addLegend("bottomright", 
-                colors ="#03F",
-                labels= values$final_dataset$distance[2],
-                title= "Longest Distacne in meters",
-                opacity = 1)
+# create a function with arguments to load the data from other modules.
+
+map_server <- function(id, search_value, input_datasetvalue) {
   
-  })
-  output$title_ui<-renderUI({
-               tags$h2("Displaying Longest Distance of the Selected Vessel","[",input$select_vesselname,"]")
-  })
-output$log_class_ui<-renderUI({
-  textOutput(ns("log_lal_values"))
-})
-output$log_lal_values<-renderText({
-  paste0("Long:",values$final_dataset$LON,"","Lat",values$final_dataset$LAT)
-})
+  # Start of the Module server.
+  
+  moduleServer(id, function(input, output, session) {  
+    ns <- shiny::NS(id) # Namespace for Unique id's
+    
+    values <- reactiveValues()  # User reactive values for global use
+    
+    # Render output to check serchbar is null or not  
+    
+    output$ui_text_map <- renderUI({
+      if (search_value()=="") { # used reactive function argument from servermodule-1
+        
+        infoBoxOutput(ns("user_info"))  # if it is NULL show the info box
+      } else{
+        
+        leafletOutput(ns("species_map"), height = "380px") # Not null show the map 
+        
+      }
+    })  # End of the output
+    
+    # Render the output of infobox
+    
+    output$user_info <- renderInfoBox({
+      infoBox(
+        "Please Select Scientific Name",
+        paste0("Enter your search to view the Observations on the Map "),
+        icon = icon("map-marker"),
+        color = "purple",
+        fill = TRUE
+      )
+    })  # End of the info box
+    
+    # Observe event to trigger the search bar input...
+    
+    observeEvent(search_value(), {
+      
+      # Render the output of download button
+      # output$ui_download <- renderUI({
+      #   downloadButton(ns("download_map"))  # Download button
+      #   
+      # })
+      # Load the reactive function argument into the new reactive variable.
+      
+      values$checkbox_values <- search_value()  
+      
+      # Filter the Scientific name column from the reactive function argument table by giving search input data
+      
+      values$checkbox_species <-
+        
+        filter(input_datasetvalue(),scientificName==values$checkbox_values | vernacularName==values$checkbox_values)
+      
+      
+      # Render the output to get the Map with selected observations of the species.
+      output$species_map <- renderLeaflet({
+        
+        values$m <- leaflet(values$checkbox_species) %>%
+          addTiles() %>%
+          addCircleMarkers(
+            lng = ~ longitudeDecimal,
+            lat = ~ latitudeDecimal,
+            label = ~ htmlEscape(scientificName),
+            labelOptions = labelOptions(
+              noHide = T,
+              direction = "bottom",
+              style = list(
+                "color" = "black",
+                "font-family" = "serif",
+                "font-style" = "italic",
+                "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
+                "font-size" = "12px",
+                "border-color" = "rgba(0,0,0,0.5)"
+              )
+            )
+          )
+        
+        
+        values$m %>% addMiniMap(tiles = providers$Esri.WorldStreetMap,
+                                toggleDisplay = TRUE)
+      })  # End of the render output 
+      # 
+      # # Render the download handler to download the png 
+      # output$download_map <- downloadHandler(
+      #   filename = "map.png",
+      #   
+      #   
+      #   content = function(file) {
+      #     shiny::withProgress(
+      #       message = paste0("Downloading", input$dataset, " Data"),
+      #       value = 0,
+      #       {
+      #         shiny::incProgress(1/5)
+      #        
+      #         mapshot(values$m, file = file)      
+      #         }
+      #     )
+      #   }
+      #   
+      #  
+      # )  # End of the Download Render
+    })  # End of the Observe Event
+    
+  })  # End of the Module Server Function
 }
-
-# End of the Server Module....
+# End of the Server Module-2
