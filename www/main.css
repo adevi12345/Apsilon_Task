@@ -1,29 +1,59 @@
-.Project_object {
+
+
+
+
+.skin-blue .main-header .logo {
+    background-color: rgb(255 255 255);
+    color: #fff;
+    
+}
+.skin-blue .left-side, .skin-blue .main-sidebar, .skin-blue .wrapper {
     background-color: #15354a;
-    color: white;
-    width: 1667px;
-    padding-left: 7px;
-    padding-top: 10px;
 }
 
-.header{
-font-size: 25px;
-}
-.github{
-  padding-top: 5px;
-  font-size: 18px;
-}
-.author {
-    padding-top: -7px;
-    font-size: 29px;
-    margin-top: -21px;
-    padding-bottom: 15px;
-    margin-right: 14px;
-    text-align: right;
+.content-wrapper {
+    min-height: 100%;
+    background-color: rgb(255 255 255);
+    z-index: 800;
 }
 
-h1:first-child, h2:first-child, h3:first-child, h4:first-child, h5:first-child {
-    margin-top: 2px;
-    margin-left: 6px;
+.selectize-input {
+    min-height: 38px;
+    width: 365px;
 }
 
+
+.modal.in .modal-dialog {
+    -webkit-transform: translate(0,0);
+    -ms-transform: translate(0,0);
+    -o-transform: translate(0,0);
+    transform: translate(0,0);
+    bottom: -196px;
+}
+
+.skin-blue .main-header .navbar {
+    background-color: lightseagreen;
+}
+.box.box-solid.box-primary>.box-header {
+    color: #fff;
+    background: #15354a;
+    background-color: darkcyan;
+}
+
+@media (min-width: 768px)
+.col-sm-4 {
+    width: 128.333333%;
+}
+
+.bg-purple {
+    background-color: #605ca8!important;
+    width: 427px;
+}
+.btn-default {
+    background-color: #15354a;
+    color: #f4f4f4;
+    /* padding-bottom: 8px; */
+    /* padding-top: 10px; */
+    margin-top: 11px;
+    border-color: #ddd;
+}
