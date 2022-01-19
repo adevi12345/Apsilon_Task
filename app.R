@@ -1,42 +1,68 @@
+# R Shiny Application is for Visualize the observations on the map.
+# 1. Enter the Scientific name and Vernacular name at searchbar.
+# 2. Map with selected observations willbe shown.
+# 3. Click Run App button to see the application.
+# 4. Deployed app in and link
 
-#
-# R Shiny Application is to 
-# 1. Show the Longest Distance Between two consecutive Observations.
-# 2. Generate outputs(Leaflet Map)
-# 3. Click on the RunApp to view the Shiny Application.
-# 4. Deployed in the Shinyapps.io Server.
-# 5. Click Here to view the Deployed Shiny Application.
 # Author: Anjana
-# Date: October 22th, 2021
+# Date: January 17th, 2022
 
-# List of Packages to be use
-packages <- c("shiny","shiny.semantic","semantic.dashboard","geosphere",
-              "leaflet","feather","dplyr","shinycustomloader")
 
-# Install packages not yet installed
-installed_packages <- packages %in% rownames(installed.packages())
+# List of Packages to be used in the below format to deploy into the shiny apps.io server
 
-if (any(installed_packages == FALSE)) {
-  install.packages(packages[!installed_packages])
-}
+library("shiny")
+library("shinydashboard")
+library("dplyr")
+library("leaflet")
+library("htmltools")
+library("shinyjs")
+library("mapview")  
 
-# Packages loading
-invisible(lapply(packages, library, character.only = TRUE))
+# Below lines are used to run in local env.
+# # Install packages not yet installed
+# installed_packages <- packages %in% rownames(installed.packages())
+# 
+# if (any(installed_packages == FALSE)) {
+#   install.packages(packages[!installed_packages])
+# }
+# 
+# # Packages loading
+#invisible(lapply(packages, library, character.only = TRUE))
 
-# Loading Source File.
-source("./map.R")
-# UI Starts....
-ui <- semanticPage(tags$head(
-  tags$link(rel = "stylesheet", type = "text/css", href = "main.css")
-),
-module_ui("module_label"))  # Calling the UI Module from the map.R file
-# End of the UI.
+# Arrange icon at title position
 
-# Server Function Starts..
+title <- tags$img(src = "icon.png",
+                  height = '50',
+                  width = '150')
+
+# Start of the  User Interface
+
+ui <- dashboardPage(
+  dashboardHeader(title = title), 
+  dashboardSidebar(width = 400,
+                   searchbar_ui("search_label")),  # Module-1(UI) from searchbar.R source file
+  
+  dashboardBody(includeCSS("www/main.css"),  # Including the css file
+                useShinyjs(),  # Use shinyjs
+                  map_ui("species_maplabel"))  # Module-2(UI) from map.R source file
+
+  )  # End of the User Interface
+
+# Start of the Server Logic
+
 server <- function(input, output, session) {
-  callModule(module_server, "module_label")  # Calling the Server Module from the map.R file
-}
-# End of the Server Function.
-
-# Calling the Shiny App with UI,Server.
-shinyApp(ui, server)
+  # Assiging the Server Module-1 to the new variable
+  search_text_value <- searchbar_server("search_label")  
+  
+  # passing the function arguments inside the Server Module -2 using Server Module-1. 
+  
+  map_server(
+    "species_maplabel",
+    search_value = search_text_value$input_search,  # getting the input_search value from the Server Module-1
+    input_datasetvalue = search_text_value$input_dataset  # Loading the dataset from the Server Module-1
+  )
+  
+} 
+# End of the Server Logic
+shinyApp(ui, server)  # Load the ui,server functions for shinyapp.
+# End of the Shiny Application
